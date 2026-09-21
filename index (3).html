@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Letter Game 🔤</title>
+    <style>
+        /* ==================== GLOBAL STYLES & NEON THEMES ==================== */
+        :root {
+            --bg-color: #0d021a;
+            --main-color: #9d4edd;
+            --glow-color: #e0aaff;
+            --text-color: #ffffff;
+            --card-bg: rgba(25, 10, 40, 0.85);
+            --btn-hover: #c77dff;
+        }
+
+        /* Color Themes */
+        body.theme-purple {
+            --main-color: #9d4edd;
+            --glow-color: #e0aaff;
+            --btn-hover: #c77dff;
+        }
+        body.theme-cyan {
+            --main-color: #00b4d8;
+            --glow-color: #90e0ef;
+            --btn-hover: #48cae4;
+        }
+        body.theme-green {
+            --main-color: #38b000;
+            --glow-color: #70e000;
+            --btn-hover: #9ef01a;
+        }
+        body.theme-pink {
+            --main-color: #ff007f;
+            --glow-color: #ff80bf;
+            --btn-hover: #ff4d6d;
+        }
+        body.theme-gold {
+            --main-color: #ffb703;
+            --glow-color: #ffe66d;
+            --btn-hover: #ffc300;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        /* Sparkle Background Effect */
+        .bg-sparkles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, var(--glow-color), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, var(--glow-color), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 160px 120px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: sparkle 4s infinite linear;
+            opacity: 0.6;
+        }
+@keyframes sparkle {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        /* Game Container */
+        .container {
+            width: 90%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border: 3px solid var(--main-color);
+            box-shadow: 0 0 20px var(--main-color), inset 0 0 15px var(--main-color);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            margin: 20px 0;
+        }
+
+        /* Glow Text Effect */
+        .glow-text {
+            color: #fff;
+            text-shadow: 0 0 8px var(--glow-color), 0 0 20px var(--main-color);
+        }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            color: #fff;
+            border: 2px solid var(--main-color);
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px var(--main-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--btn-hover);
+            color: #000;
+            box-shadow: 0 0 20px var(--btn-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 5px 12px;
+            font-size: 0.9rem;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* ==================== HOME SCREEN ==================== */
+        .uk-flag {
+            width: 80px;
+            height: 50px;
+            margin: 0 auto 10px;
+            background: linear-gradient(90deg, #00247D, #CC0000);
+            border: 2px solid #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+        }
+
+        .theme-selector {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .theme-dot {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: transform 0.2s;
+        }
+        .theme-dot:hover { transform: scale(1.2); }
+
+/* ==================== GAMEPLAY SCREEN ==================== */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .timer-penalty {
+            animation: shake 0.3s ease-in-out, flash-red 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes flash-red {
+            0%, 100% { color: #ff4d6d; }
+            50% { color: #ff0000; font-scale: 1.3; }
+        }
+
+        .word-image {
+            font-size: 4rem;
+            margin: 10px 0 5px 0;
+            filter: drop-shadow(0 0 10px var(--glow-color));
+        }
+
+        .word-meaning {
+            font-size: 1.1rem;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+
+        .word-display {
+            font-size: 2.8rem;
+            letter-spacing: 6px;
+            margin: 15px 0;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px var(--glow-color);
+            word-break: break-all;
+        }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .key-btn {
+            width: 40px;
+            height: 45px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--main-color);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .key-btn:hover:not(:disabled) {
+            background: var(--main-color);
+            box-shadow: 0 0 8px var(--glow-color);
+        }
+
+        .key-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ==================== RESULT SCREEN ==================== */
+        .result-icon {
+            font-size: 4.5rem;
+            margin: 5px 0;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-12px); }
+        }
+
+        .score-board {
+            font-size: 1.1rem;
+            margin: 15px 0;
+            background: rgba(0,0,0,0.5);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed var(--glow-color);
+        }
+
+        /* Answer Review List */
+        .review-box {
+            max-height: 220px;
+            overflow-y: auto;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            border: 1px solid var(--main-color);
+            text-align: left;
+        }
+
+        .review-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .review-item.correct { border-left: 4px solid #38b000; }
+        .review-item.wrong { border-left: 4px solid #ff4d6d; }
+
+        /* Scrollbar Style */
+        .review-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .review-box::-webkit-scrollbar-thumb {
+            background: var(--main-color);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="theme-purple">
+<div class="bg-sparkles"></div>
+
+    <div class="container">
+        
+        <div id="screen-start" class="screen active">
+            <div class="uk-flag">🇬🇧</div>
+            <h1 class="glow-text" style="font-size: 2.2rem; margin: 10px 0;">MISSING LETTER</h1>
+            <p style="color: #ccc;">เกมเติมตัวอักษรภาษาอังกฤษที่หายไป ✨</p>
+            <div style="font-size: 3rem; margin: 15px 0;">🔤 🎯 ⏱️</div>
+            
+            <button class="btn" onclick="goToCategory()">🎮 START GAME</button>
+
+            <div class="theme-selector">
+                <p style="margin: 0 0 8px 0; font-size: 0.9rem;">🎨 เลือกธีมสีไอเท็ม (Theme Color):</p>
+                <span class="theme-dot" style="background: #9d4edd;" onclick="setTheme('purple')"></span>
+                <span class="theme-dot" style="background: #00b4d8;" onclick="setTheme('cyan')"></span>
+                <span class="theme-dot" style="background: #38b000;" onclick="setTheme('green')"></span>
+                <span class="theme-dot" style="background: #ff007f;" onclick="setTheme('pink')"></span>
+                <span class="theme-dot" style="background: #ffb703;" onclick="setTheme('gold')"></span>
+            </div>
+        </div>
+
+        <div id="screen-category" class="screen">
+            <button class="btn btn-back" onclick="goToStart()">⬅️ กลับ</button>
+            <h2 class="glow-text">📚 เลือกระดับชั้น</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="startGame('p1')">🎒 ป.1 (Easy)</button>
+                <button class="btn" onclick="startGame('p2')">✏️ ป.2 (Easy)</button>
+                <button class="btn" onclick="startGame('p3')">📘 ป.3 (Medium)</button>
+                <button class="btn" onclick="startGame('p4')">📗 ป.4 (Medium)</button>
+                <button class="btn" onclick="startGame('p5')">📙 ป.5 (Medium)</button>
+                <button class="btn" onclick="startGame('p6')">📓 ป.6 (Hard)</button>
+                <button class="btn" onclick="startGame('m1')">🎓 ม.1 (Basic)</button>
+                <button class="btn" onclick="startGame('m2')">🏫 ม.2 (Basic)</button>
+                <button class="btn" onclick="startGame('m3')" style="grid-column: span 2;">🌟 ม.3 (Basic Easy)</button>
+            </div>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div class="game-header">
+                <div>📌 ข้อ: <span id="current-question">1</span>/10</div>
+                <div>⭐ คะแนน: <span id="current-score">0</span></div>
+                <div>⏱️ เวลา: <span id="timer" style="color: #ff4d6d;">80</span>s</div>
+            </div>
+
+            <div id="word-category-title" style="font-size: 0.9rem; color: var(--glow-color);"></div>
+            
+            <div class="word-image" id="word-icon">🐱</div>
+            <div class="word-meaning" id="word-meaning">(แมว)</div>
+
+            <div class="word-display" id="word-display">C_T</div>
+
+            <div class="keyboard" id="keyboard"></div>
+        </div>
+
+        <div id="screen-result" class="screen">
+            <div id="win-content" style="display: none;">
+                <div class="result-icon">🏆</div>
+                <h1 class="glow-text" style="color: #70e000; margin: 5px 0;">YOU WIN! 🎉</h1>
+                <p style="margin: 5px 0;">ยินดีด้วย! คุณเก่งมากทำคะแนนได้เยี่ยมยอด!</p>
+            </div>
+
+            <div id="lose-content" style="display: none;">
+                <div class="result-icon">😭</div>
+                <h1 class="glow-text" style="color: #ff4d6d; margin: 5px 0;">LOSER... 💔</h1>
+                <p style="margin: 5px 0;">เสียใจด้วยนะ! พยายามใหม่อีกครั้ง!</p>
+            </div>
+
+            <div class="score-board">
+                📊 <b>สรุปผลการเล่น</b><br>
+                คะแนนที่ได้: <span id="final-score" style="color: var(--glow-color); font-weight: bold;">0</span> / 10 ข้อ | 
+                เวลาที่ใช้: <span id="final-time" style="color: var(--glow-color); font-weight: bold;">0</span> วินาที
+            </div>
+
+            <div style="font-weight: bold; text-align: left; margin-bottom: 5px; color: var(--glow-color);">
+                📝 เฉลยคำศัพท์ทั้งหมด:
+            </div>
+            <div class="review-box" id="review-list"></div>
+
+            <button class="btn" onclick="goToCategory()">🔄 เล่นอีกครั้ง</button>
+            <button class="btn" onclick="goToStart()">🏠 หน้าแรก</button>
+        </div>
+
+    </div>
+
+    <script>
+/* ================= WORD DATABASE (พร้อมรูปภาพ Emoji & คำแปล) ================= */
+        const wordDatabase = {
+            p1: [
+                { word: "CAT", missing: 2, icon: "🐱", meaning: "แมว" },
+                { word: "DOG", missing: 2, icon: "🐶", meaning: "สุนัข" },
+                { word: "BAT", missing: 1, icon: "🦇", meaning: "ค้างคาว" },
+                { word: "PEN", missing: 2, icon: "🖊️", meaning: "ปากกา" },
+                { word: "SUN", missing: 2, icon: "☀️", meaning: "พระอาทิตย์" },
+                { word: "PIG", missing: 2, icon: "🐷", meaning: "หมู" },
+                { word: "BUS", missing: 2, icon: "🚌", meaning: "รถบัส" },
+                { word: "RED", missing: 1, icon: "🔴", meaning: "สีแดง" },
+                { word: "BOX", missing: 3, icon: "📦", meaning: "กล่อง" },
+                { word: "CUP", missing: 2, icon: "🥤", meaning: "แก้วน้ำ" },
+                { word: "BED", missing: 2, icon: "🛏️", meaning: "เตียงนอน" },
+                { word: "FAN", missing: 1, icon: "🪭", meaning: "พัดลม" }
+            ],
+            p2: [
+                { word: "FISH", missing: 2, icon: "🐟", meaning: "ปลา" },
+                { word: "DUCK", missing: 3, icon: "🦆", meaning: "เป็ด" },
+                { word: "BIRD", missing: 2, icon: "🐦", meaning: "นก" },
+                { word: "BOOK", missing: 3, icon: "📖", meaning: "หนังสือ" },
+                { word: "FROG", missing: 2, icon: "🐸", meaning: "กบ" },
+                { word: "MILK", missing: 2, icon: "🥛", meaning: "นม" },
+                { word: "CAKE", missing: 2, icon: "🍰", meaning: "เค้ก" },
+                { word: "STAR", missing: 3, icon: "⭐", meaning: "ดาว" },
+                { word: "KING", missing: 2, icon: "👑", meaning: "พระราชา" },
+                { word: "TREE", missing: 3, icon: "🌳", meaning: "ต้นไม้" },
+                { word: "HAND", missing: 1, icon: "✋", meaning: "มือ" },
+                { word: "BALL", missing: 2, icon: "⚽", meaning: "ลูกบอล" }
+            ],
+            p3: [
+                { word: "APPLE", missing: 2, icon: "🍎", meaning: "แอปเปิ้ล" },
+                { word: "TRAIN", missing: 3, icon: "🚆", meaning: "รถไฟ" },
+                { word: "SMILE", missing: 3, icon: "😊", meaning: "รอยยิ้ม" },
+                { word: "WATER", missing: 2, icon: "💧", meaning: "น้ำ" },
+                { word: "GREEN", missing: 3, icon: "🟢", meaning: "สีเขียว" },
+                { word: "HOUSE", missing: 2, icon: "🏠", meaning: "บ้าน" },
+                { word: "BREAD", missing: 3, icon: "🍞", meaning: "ขนมปัง" },
+                { word: "CLOCK", missing: 3, icon: "⏰", meaning: "นาฬิกา" },
+                { word: "CHAIR", missing: 2, icon: "🪑", meaning: "เก้าอี้" },
+                { word: "PENCIL", missing: 2, icon: "✏️", meaning: "ดินสอ" },
+                { word: "BANANA", missing: 3, icon: "🍌", meaning: "กล้วย" },
+                { word: "TIGER", missing: 2, icon: "🐯", meaning: "เสือ" }
+            ],
+            p4: [
+                { word: "ANIMAL", missing: 2, icon: "🐾", meaning: "สัตว์" },
+                { word: "SCHOOL", missing: 3, icon: "🏫", meaning: "โรงเรียน" },
+                { word: "DOCTOR", missing: 4, icon: "👨‍⚕️", meaning: "คุณหมอ" },
+                { word: "FLOWER", missing: 2, icon: "🌸", meaning: "ดอกไม้" },
+                { word: "ORANGE", missing: 3, icon: "🍊", meaning: "ส้ม" },
+                { word: "SUMMER", missing: 2, icon: "🏖️", meaning: "ฤดูร้อน" },
+                { word: "MOTHER", missing: 2, icon: "👩", meaning: "แม่" },
+                { word: "FATHER", missing: 3, icon: "👨", meaning: "พ่อ" },
+                { word: "RABBIT", missing: 3, icon: "🐰", meaning: "กระต่าย" },
+                { word: "YELLOW", missing: 2, icon: "🟡", meaning: "สีเหลือง" },
+                { word: "WINDOW", missing: 3, icon: "🪟", meaning: "หน้าต่าง" },
+                { word: "MONKEY", missing: 2, icon: "🐵", meaning: "ลิง" }
+            ],
+            p5: [
+                { word: "STUDENT", missing: 3, icon: "🧑‍🎓", meaning: "นักเรียน" },
+                { word: "TEACHER", missing: 2, icon: "🧑‍🏫", meaning: "คุณครู" },
+                { word: "MORNING", missing: 4, icon: "🌅", meaning: "ตอนเช้า" },
+                { word: "PICTURE", missing: 3, icon: "🖼️", meaning: "รูปภาพ" },
+                { word: "BROTHER", missing: 2, icon: "👦", meaning: "พี่ชาย/น้องชาย" },
+                { word: "KITCHEN", missing: 4, icon: "🍳", meaning: "ห้องครัว" },
+                { word: "AIRPORT", missing: 3, icon: "✈️", meaning: "สนามบิน" },
+                { word: "STATION", missing: 2, icon: "🚉", meaning: "สถานี" },
+                { word: "WEATHER", missing: 4, icon: "🌤️", meaning: "สภาพอากาศ" },
+                { word: "COUNTRY", missing: 3, icon: "🗺️", meaning: "ประเทศ" },
+                { word: "HOLIDAY", missing: 2, icon: "🎉", meaning: "วันหยุด" },
+                { word: "SUNDAY", missing: 2, icon: "📅", meaning: "วันอาทิตย์" }
+            ],
+            p6: [
+                { word: "COMPUTER", missing: 3, icon: "💻", meaning: "คอมพิวเตอร์" },
+                { word: "HOSPITAL", missing: 4, icon: "🏥", meaning: "โรงพยาบาล" },
+                { word: "FOOTBALL", missing: 3, icon: "⚽", meaning: "ฟุตบอล" },
+                { word: "ELEPHANT", missing: 4, icon: "🐘", meaning: "ช้าง" },
+                { word: "UMBRELLA", missing: 3, icon: "☂️", meaning: "ร่ม" },
+                { word: "MOUNTAIN", missing: 4, icon: "⛰️", meaning: "ภูเขา" },
+                { word: "BUILDING", missing: 3, icon: "🏢", meaning: "ตึก/อาคาร" },
+                { word: "CALENDAR", missing: 4, icon: "📆", meaning: "ปฏิทิน" },
+                { word: "INTERNET", missing: 3, icon: "🌐", meaning: "อินเทอร์เน็ต" },
+                { word: "BIRTHDAY", missing: 4, icon: "🎂", meaning: "วันเกิด" },
+                { word: "DINOSAUR", missing: 3, icon: "🦕", meaning: "ไดโนเสาร์" },
+                { word: "NOTEBOOK", missing: 2, icon: "📓", meaning: "สมุดบันทึก" }
+            ],
+m1: [
+                { word: "FAMILY", missing: 2, icon: "👨‍👩‍👧", meaning: "ครอบครัว" },
+                { word: "FRIEND", missing: 3, icon: "🧑‍🤝‍🧑", meaning: "เพื่อน" },
+                { word: "MARKET", missing: 2, icon: "🛒", meaning: "ตลาด" },
+                { word: "GUITAR", missing: 3, icon: "🎸", meaning: "กีตาร์" },
+                { word: "PLANT", missing: 2, icon: "🪴", meaning: "พืชพรรณ" },
+                { word: "TRAVEL", missing: 2, icon: "🧳", meaning: "ท่องเที่ยว" },
+                { word: "BOTTLE", missing: 3, icon: "🍾", meaning: "ขวด" },
+                { word: "CAMERA", missing: 2, icon: "📷", meaning: "กล้องถ่ายรูป" },
+                { word: "COFFEE", missing: 2, icon: "☕", meaning: "กาแฟ" },
+                { word: "SILVER", missing: 3, icon: "🥈", meaning: "แร่เงิน" },
+                { word: "DRAGON", missing: 2, icon: "🐉", meaning: "มังกร" }
+            ],
+            m2: [
+                { word: "WINTER", missing: 3, icon: "❄️", meaning: "ฤดูหนาว" },
+                { word: "SPRING", missing: 2, icon: "🌱", meaning: "ฤดูใบไม้ผลิ" },
+                { word: "DREAM", missing: 2, icon: "💭", meaning: "ความฝัน" },
+                { word: "CLOUD", missing: 2, icon: "☁️", meaning: "ก้อนเมฆ" },
+                { word: "SMART", missing: 2, icon: "🧠", meaning: "ฉลาด" },
+                { word: "SWEET", missing: 2, icon: "🍬", meaning: "หวาน" },
+                { word: "GREAT", missing: 2, icon: "👍", meaning: "ยอดเยี่ยม" },
+                { word: "LIGHT", missing: 2, icon: "💡", meaning: "แสงไฟ" },
+                { word: "EARTH", missing: 2, icon: "🌍", meaning: "โลก" },
+                { word: "SPACE", missing: 2, icon: "🚀", meaning: "อวกาศ" }
+            ],
+            m3: [
+                { word: "HAPPY", missing: 2, icon: "😄", meaning: "มีความสุข" },
+                { word: "MUSIC", missing: 2, icon: "🎵", meaning: "ดนตรี" },
+                { word: "POWER", missing: 2, icon: "⚡", meaning: "พลังงาน" },
+                { word: "PEACE", missing: 2, icon: "🕊️", meaning: "สันติภาพ" },
+                { word: "WORLD", missing: 2, icon: "🌐", meaning: "โลก" },
+                { word: "HEART", missing: 2, icon: "❤️", meaning: "หัวใจ" },
+                { word: "NEVER", missing: 2, icon: "🚫", meaning: "ไม่เคย" },
+                { word: "ALWAYS", missing: 2, icon: "♾️", meaning: "เสมอ" },
+                { word: "FUTURE", missing: 2, icon: "🔮", meaning: "อนาคต" },
+                { word: "STORY", missing: 2, icon: "📚", meaning: "เรื่องราว" },
+                { word: "MAGIC", missing: 2, icon: "🪄", meaning: "เวทมนตร์" },
+                { word: "PARTY", missing: 2, icon: "🥳", meaning: "งานปาร์ตี้" }
+            ]
+        };
+
+        /* ================= GAME VARIABLES ================= */
+        let currentQuestions = [];
+        let questionIndex = 0;
+        let score = 0;
+        let timer = 80;
+        let timerInterval = null;
+        let currentWordObj = null;
+        let targetLetter = "";
+        let userResults = []; // เก็บประวัติการตอบเพื่อนำไปเฉลย
+
+        /* Audio System (Web Audio API) */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3);
+                osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.45);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.8);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'wrong') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+/* ================= NAVIGATION ================= */
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goToStart() {
+            clearInterval(timerInterval);
+            showScreen('screen-start');
+        }
+
+        function goToCategory() {
+            clearInterval(timerInterval);
+            showScreen('screen-category');
+        }
+
+        function setTheme(colorTheme) {
+            document.body.className = 'theme-' + colorTheme;
+        }
+
+        /* ================= GAME LOGIC ================= */
+        function startGame(level) {
+            let fullList = [...wordDatabase[level]];
+            fullList.sort(() => Math.random() - 0.5);
+            currentQuestions = fullList.slice(0, 10);
+
+            questionIndex = 0;
+            score = 0;
+            timer = 80;
+            userResults = [];
+
+            document.getElementById('current-score').innerText = score;
+            document.getElementById('timer').innerText = timer;
+            document.getElementById('word-category-title').innerText = "ระดับชั้น: " + level.toUpperCase();
+
+            showScreen('screen-game');
+            renderKeyboard();
+            nextQuestion();
+
+            // Start Timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById('timer').innerText = timer;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function renderKeyboard() {
+            const kbContainer = document.getElementById('keyboard');
+            kbContainer.innerHTML = '';
+            for (let i = 65; i <= 90; i++) {
+                const char = String.fromCharCode(i);
+                const btn = document.createElement('button');
+                btn.className = 'key-btn';
+                btn.innerText = char;
+                btn.id = 'key-' + char;
+                btn.onclick = () => handleGuess(char);
+                kbContainer.appendChild(btn);
+            }
+        }
+
+        function nextQuestion() {
+            if (questionIndex >= 10) {
+                clearInterval(timerInterval);
+                endGame(true);
+                return;
+            }
+
+            document.querySelectorAll('.key-btn').forEach(btn => btn.disabled = false);
+
+            document.getElementById('current-question').innerText = questionIndex + 1;
+            currentWordObj = currentQuestions[questionIndex];
+
+            // Render Icon & Meaning
+            document.getElementById('word-icon').innerText = currentWordObj.icon;
+            document.getElementById('word-meaning').innerText = `(${currentWordObj.meaning})`;
+
+            // Display Word With Blank
+            let wordStr = currentWordObj.word;
+            let missingIdx = currentWordObj.missing - 1;
+            targetLetter = wordStr[missingIdx];
+
+            let displayArray = wordStr.split('');
+            displayArray[missingIdx] = '_';
+
+            document.getElementById('word-display').innerText = displayArray.join('');
+        }
+function handleGuess(letter) {
+            document.getElementById('key-' + letter).disabled = true;
+
+            if (letter === targetLetter) {
+                // ตอบถูก
+                playSound('correct');
+                score++;
+                document.getElementById('current-score').innerText = score;
+                document.getElementById('word-display').innerText = currentWordObj.word;
+
+                userResults.push({
+                    wordObj: currentWordObj,
+                    isCorrect: true
+                });
+
+                questionIndex++;
+                setTimeout(nextQuestion, 500);
+            } else {
+                // ตอบผิด -> ลดเวลาลงทีละ 3 วินาที
+                playSound('wrong');
+                timer -= 3;
+                if (timer < 0) timer = 0;
+                
+                const timerEl = document.getElementById('timer');
+                timerEl.innerText = timer;
+                
+                // Trigger Animation เตือนเวลาลด
+                timerEl.classList.remove('timer-penalty');
+                void timerEl.offsetWidth; // Trigger Reflow
+                timerEl.classList.add('timer-penalty');
+
+                if (timer <= 0) {
+                    userResults.push({
+                        wordObj: currentWordObj,
+                        isCorrect: false
+                    });
+                    clearInterval(timerInterval);
+                    endGame(false);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            showScreen('screen-result');
+            
+            const usedTime = 80 - timer;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-time').innerText = usedTime > 80 ? 80 : usedTime;
+
+            const winDiv = document.getElementById('win-content');
+            const loseDiv = document.getElementById('lose-content');
+
+            // หากผ่านครบ 10 ข้อ หรือได้คะแนนเกิน 5 ขึ้นไปถือว่าชนะ
+            if (isWin && score >= 5) {
+                winDiv.style.display = 'block';
+                loseDiv.style.display = 'none';
+                playSound('win');
+            } else {
+                winDiv.style.display = 'none';
+                loseDiv.style.display = 'block';
+                playSound('lose');
+            }
+
+            // บันทึกคำศัพท์ข้อที่ไม่ได้ตอบ (กรณีเวลาหมดกลางคัน)
+            while (userResults.length < currentQuestions.length) {
+                userResults.push({
+                    wordObj: currentQuestions[userResults.length],
+                    isCorrect: false
+                });
+            }
+
+            // สร้างรายการเฉลยคำตอบทุกข้อ
+            renderReviewList();
+        }
+
+        function renderReviewList() {
+            const reviewBox = document.getElementById('review-list');
+            reviewBox.innerHTML = '';
+
+            userResults.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `review-item ${item.isCorrect ? 'correct' : 'wrong'}`;
+                
+                const statusIcon = item.isCorrect ? '✅' : '❌';
+                div.innerHTML = `
+                    <div>
+                        <b>ข้อ ${index + 1}:</b> ${item.wordObj.icon} <b>${item.wordObj.word}</b> (${item.wordObj.meaning})
+                    </div>
+                    <div>${statusIcon}</div>
+                `;
+                reviewBox.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
