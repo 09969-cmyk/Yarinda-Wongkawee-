@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DNA Code Breaker - Yarinda</title>
+  <link rel="manifest" href="yarindadna.json">
+  <meta name="theme-color" content="#120722">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #120722; color: #fff; text-align: center; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; }
+    
+    /* หน้าปกเกม */
+    #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+    .cover-dna-icon { font-size: 5rem; margin-bottom: 10px; animation: pulse 2s infinite ease-in-out; text-shadow: 0 0 20px #b55fe6; }
+    @keyframes pulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.1) rotate(10deg); } }
+    
+    .game-title { font-size: 2.2rem; font-weight: 800; color: #d69ade; text-shadow: 0 0 12px #9d4edd, 0 0 25px #7b2cbf; margin-bottom: 8px; }
+    .game-subtitle { font-size: 0.95rem; color: #b39ddb; margin-bottom: 30px; letter-spacing: 1px; }
+    
+    .start-btn { background: linear-gradient(135deg, #7b2cbf, #9d4edd); color: #fff; font-size: 1.3rem; font-weight: bold; padding: 15px 45px; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(157, 78, 221, 0.6); transition: all 0.2s; }
+    .start-btn:active { transform: scale(0.95); }
+
+    /* หน้าเกมหลัก */
+    #game-screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
+    h1 { font-size: 1.6rem; color: #d69ade; text-shadow: 0 0 10px #9d4edd; margin-bottom: 10px; }
+    .stats { display: flex; justify-content: space-around; width: 100%; margin-bottom: 20px; font-size: 1.1rem; font-weight: bold; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(157, 78, 221, 0.3); }
+    
+    .dna-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin: 15px 0; width: 100%; }
+    .strand-title { font-size: 0.85rem; color: #b39ddb; }
+    .strand { display: flex; gap: 8px; background: rgba(36, 16, 61, 0.8); padding: 12px; border-radius: 15px; width: 100%; justify-content: center; min-height: 75px; align-items: center; border: 1px solid rgba(181, 95, 230, 0.2); }
+    
+    .base-box { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; transition: all 0.2s; }
+    .template { background: #2a1147; border: 2px solid #b55fe6; color: #e0aaff; box-shadow: 0 0 10px rgba(181, 95, 230, 0.4); }
+    .target { background: #1c0b30; border: 2px dashed #7b2cbf; color: #fff; }
+    .filled { border-style: solid; background: #3c1361; }
+    
+    .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+    .base-btn { width: 65px; height: 65px; border: none; border-radius: 15px; font-weight: bold; font-size: 1.5rem; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .base-btn:active { transform: scale(0.90); }
+    
+    .btn-A { background: #ff2a6d; }
+    .btn-T { background: #05d9e8; }
+    .btn-C { background: #ffb703; }
+    .btn-G { background: #7b2cbf; }
+    
+    .info { margin-top: 15px; font-size: 0.95rem; color: #b39ddb; }
+    .reset-btn { margin-top: 15px; padding: 8px 18px; background: transparent; border: 1px solid #9d4edd; color: #d69ade; border-radius: 20px; cursor: pointer; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+  <!-- หน้าปก -->
+  <div id="start-screen">
+    <div class="cover-dna-icon">🧬</div>
+    <div class="game-title">DNA CODE BREAKER</div>
+    <div class="game-subtitle">เกมไขรหัสพันธุกรรม โดย Yarinda</div>
+    <button class="start-btn" id="start-btn-action" onclick="startGame()">เริ่มเล่นเกม</button>
+  </div>
+
+  <!-- หน้าเกมหลัก -->
+  <div id="game-screen">
+    <h1>🧬 DNA Code Breaker</h1>
+    <div class="stats">
+      <div>คะแนน: <span id="score">0</span></div>
+      <div>ด่าน: <span id="level">1</span></div>
+    </div>
+
+    <div class="dna-container">
+      <div class="strand-title">สายแม่แบบ (Template)</div>
+      <div class="strand" id="template-strand"></div>
+      <div class="strand-title">สายคู่สม (Complementary)</div>
+      <div class="strand" id="target-strand"></div>
+    </div>
+
+    <p class="info">จับคู่เบสที่ถูกต้อง (A ↔ T, C ↔ G)</p>
+
+    <div class="btn-group">
+      <button class="base-btn btn-A" onclick="handleInput('A')">A</button>
+      <button class="base-btn btn-T" onclick="handleInput('T')">T</button>
+      <button class="base-btn btn-C" onclick="handleInput('C')">C</button>
+      <button class="base-btn btn-G" onclick="handleInput('G')">G</button>
+    </div>
+
+    <button class="reset-btn" onclick="clearInput()">ลบคำตอบข้อนี้</button>
+  </div>
+
+  <script>
+    const pairs = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
+    const bases = ['A', 'T', 'C', 'G'];
+    
+    let score = 0;
+    let level = 1;
+    let templateDNA = [];
+    let userInput = [];
+
+    function startGame() {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'flex';
+      score = 0;
+      level = 1;
+      updateStats();
+      generateLevel();
+    }
+
+    function generateLevel() {
+      templateDNA = [];
+      userInput = [];
+      const length = Math.min(3 + Math.floor(level / 2), 5); // เพิ่มความยาวรหัสตามระดับด่าน
+
+      for (let i = 0; i < length; i++) {
+        const randomBase = bases[Math.floor(Math.random() * bases.length)];
+        templateDNA.push(randomBase);
+      }
+
+      renderStrands();
+    }
+
+    function renderStrands() {
+      const templateEl = document.getElementById('template-strand');
+      const targetEl = document.getElementById('target-strand');
+
+      templateEl.innerHTML = '';
+      targetEl.innerHTML = '';
+
+      templateDNA.forEach(base => {
+        const box = document.createElement('div');
+        box.className = 'base-box template';
+        box.textContent = base;
+        templateEl.appendChild(box);
+      });
+
+      for (let i = 0; i < templateDNA.length; i++) {
+        const box = document.createElement('div');
+        box.className = 'base-box target';
+        if (userInput[i]) {
+          box.textContent = userInput[i];
+          box.classList.add('filled');
+        }
+        targetEl.appendChild(box);
+      }
+    }
+
+    function handleInput(base) {
+      if (userInput.length < templateDNA.length) {
+        userInput.push(base);
+        renderStrands();
+
+        if (userInput.length === templateDNA.length) {
+          checkAnswer();
+        }
+      }
+    }
+
+    function clearInput() {
+      userInput = [];
+      renderStrands();
+    }
+
+    function checkAnswer() {
+      let isCorrect = true;
+      for (let i = 0; i < templateDNA.length; i++) {
+        if (pairs[templateDNA[i]] !== userInput[i]) {
+          isCorrect = false;
+          break;
+        }
+      }
+
+      setTimeout(() => {
+        if (isCorrect) {
+          score += 10 * level;
+          level++;
+          alert('ถูกต้อง! ผ่านเข้าสู่ด่านถัดไป');
+        } else {
+          alert('ยังไม่ถูกต้อง ลองใหม่อีกครั้ง!');
+        }
+        updateStats();
+        if (isCorrect) {
+          generateLevel();
+        } else {
+          clearInput();
+        }
+      }, 200);
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('level').textContent = level;
+    }
+
+    // ลงทะเบียน Service Worker สำหรับ PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('yarindadna.js')
+          .then(reg => console.log('SW registered successfully:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
