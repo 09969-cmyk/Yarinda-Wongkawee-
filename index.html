@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Panda Bubble Shooter Deluxe</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', 'Segoe UI', Tahoma, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1a1c2e 0%, #0f101d 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(79, 172, 254, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 16px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-box span {
+            color: #00f2fe;
+            font-size: 20px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        #gameCanvas {
+            background: #090a10;
+            display: block;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 11, 20, 0.88);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }.overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .overlay h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff0844, #ffb199);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(255, 8, 68, 0.5);
+        }
+
+        .overlay p {
+            font-size: 16px;
+            color: #cbd5e0;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn-glow {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 198, 255, 0.8);
+        }
+
+        .btn-glow:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>PANDA BUBBLE 3D</h1>
+            <div class="stats">
+                <div class="stat-box">คะแนน: <span id="score">0</span></div>
+            </div>
+        </header>
+
+        <main class="canvas-wrapper">
+            <canvas id="gameCanvas" width="440" height="600"></canvas>
+            
+            <div id="startScreen" class="overlay">
+                <h2 style="background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">BUBBLE SHOOTER 3D</h2>
+                <p>สัมผัสประสบการณ์ยิงลูกแก้ว 3D พร้อมเอฟเฟกต์เสียง!<br>จับคู่สีเดียวกัน 3 ลูกขึ้นไปเพื่อทำลาย</p>
+                <button id="startBtn" class="btn-glow">เริ่มเล่นเกม</button>
+            </div>
+
+            <div id="gameOverScreen" class="overlay hidden">
+                <h2>GAME OVER</h2>
+                <p>คะแนนของคุณ: <span id="finalScore" style="color:#00f2fe; font-size:24px; font-weight:bold;">0</span></p>
+                <button id="restartBtn" class="btn-glow">เล่นอีกครั้ง</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- ระบบสร้างเสียงสังเคราะห์ (Web Audio API) ---
+        class SoundSystem {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playShoot() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playPop() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+
+            playBounce() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(150, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playGameOver() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.6);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.6);
+            }
+        }const sound = new SoundSystem();
+
+        // --- Class ลูกบอลแบบ 3D ---
+        class Bubble {
+            constructor(x, y, radius, colorObj) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = colorObj; // { base, light, dark, glow }
+                this.dx = 0;
+                this.dy = 0;
+                this.row = -1;
+                this.col = -1;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                
+                // เงาตกกระทบด้านหลัง
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 6;
+
+                // วาดทรงกลม 3D ด้วย Radial Gradient
+                const gradient = ctx.createRadialGradient(
+                    this.x - this.radius * 0.35,
+                    this.y - this.radius * 0.35,
+                    this.radius * 0.1,
+                    this.x,
+                    this.y,
+                    this.radius
+                );
+
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(0.2, this.color.light);
+                gradient.addColorStop(0.7, this.color.base);
+                gradient.addColorStop(1, this.color.dark);
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // สะท้อนแสงเงาผิวมันวาว (Glass Highlight)
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath();
+                ctx.ellipse(
+                    this.x - this.radius * 0.35,
+                    this.y - this.radius * 0.35,
+                    this.radius * 0.35,
+                    this.radius * 0.2,
+                    Math.PI / -4,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+        }
+
+        // --- Class กระดานเกม ---
+        class Board {
+            constructor(rows, cols, radius, canvasWidth) {
+                this.rows = rows;
+                this.cols = cols;
+                this.radius = radius;
+                this.canvasWidth = canvasWidth;
+                this.grid = [];
+                
+                // พาเลตสีสไตล์ 3D Neon
+                this.colors = [
+                    { base: '#ff2a74', light: '#ff75a0', dark: '#990033', glow: 'rgba(255,42,116,0.5)' }, // Red/Pink
+                    { base: '#00e5ff', light: '#80f2ff', dark: '#008ba3', glow: 'rgba(0,229,255,0.5)' },  // Cyan
+                    { base: '#00e676', light: '#66ffa6', dark: '#008e3c', glow: 'rgba(0,230,118,0.5)' }, // Green
+                    { base: '#ffea00', light: '#fff566', dark: '#a69900', glow: 'rgba(255,234,0,0.5)' },  // Yellow
+                    { base: '#d500f9', light: '#e066ff', dark: '#8a00a3', glow: 'rgba(213,0,249,0.5)' }   // Purple
+                ];
+                
+                this.initGrid();
+            }
+initGrid() {
+                for (let r = 0; r < this.rows; r++) {
+                    this.grid[r] = new Array(this.cols).fill(null);
+                }
+                
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < this.cols; c++) {
+                        const pos = this.getBubbleCoord(r, c);
+                        const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                        const bubble = new Bubble(pos.x, pos.y, this.radius, color);
+                        bubble.row = r;
+                        bubble.col = c;
+                        this.grid[r][c] = bubble;
+                    }
+                }
+            }
+
+            getBubbleCoord(row, col) {
+                const diameter = this.radius * 2;
+                const offset = (row % 2 === 1) ? this.radius : 0;
+                const x = col * diameter + this.radius + offset;
+                const y = row * (diameter * 0.866) + this.radius + 10;
+                return { x, y };
+            }
+
+            getGridPosition(x, y) {
+                const diameter = this.radius * 2;
+                const row = Math.round((y - this.radius - 10) / (diameter * 0.866));
+                const offset = (row % 2 === 1) ? this.radius : 0;
+                const col = Math.round((x - this.radius - offset) / diameter);
+                
+                const clampedRow = Math.max(0, Math.min(this.rows - 1, row));
+                const clampedCol = Math.max(0, Math.min(this.cols - 1, col));
+                return { row: clampedRow, col: clampedCol };
+            }
+
+            snapBubble(bubble) {
+                let pos = this.getGridPosition(bubble.x, bubble.y);
+                
+                if (this.grid[pos.row][pos.col] !== null) {
+                    let placed = false;
+                    for (let r = pos.row; r < this.rows && !placed; r++) {
+                        for (let c = 0; c < this.cols; c++) {
+                            if (this.grid[r][c] === null) {
+                                pos = { row: r, col: c };
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                const coord = this.getBubbleCoord(pos.row, pos.col);
+                bubble.x = coord.x;
+                bubble.y = coord.y;
+                bubble.row = pos.row;
+                bubble.col = pos.col;
+                this.grid[pos.row][pos.col] = bubble;
+
+                return pos;
+            }
+
+            getNeighbors(row, col) {
+                const neighbors = [];
+                const isOdd = row % 2 === 1;
+                const directions = isOdd ? [
+                    [-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]
+                ] : [
+                    [-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]
+                ];
+
+                for (let [dr, dc] of directions) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                        if (this.grid[nr][nc]) {
+                            neighbors.push(this.grid[nr][nc]);
+                        }
+                    }
+                }
+                return neighbors;
+            }
+
+            findCluster(row, col, colorObj) {
+                const cluster = [];
+                const queue = [{ row, col }];
+                const visited = new Set();
+                visited.add(`${row},${col}`);
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    const bubble = this.grid[current.row][current.col];
+                    if (!bubble) continue;
+
+                    cluster.push(bubble);
+
+                    const neighbors = this.getNeighbors(current.row, current.col);
+                    for (let neighbor of neighbors) {
+                        const key = `${neighbor.row},${neighbor.col}`;
+                        if (!visited.has(key) && neighbor.color.base === colorObj.base) {
+                            visited.add(key);
+                            queue.push({ row: neighbor.row, col: neighbor.col });
+                        }
+                    }
+                }
+                return cluster;
+            }
+
+            removeCluster(cluster) {
+                for (let bubble of cluster) {
+                    this.grid[bubble.row][bubble.col] = null;
+                }
+            }
+
+            draw(ctx) {
+                for (let r = 0; r < this.rows; r++) {
+                    for (let c = 0; c < this.cols; c++) {
+                        if (this.grid[r][c]) {
+                            this.grid[r][c].draw(ctx);
+                        }
+                    }
+                }
+            }
+        }// --- ระบบหลักของเกม ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreElem = document.getElementById('score');
+            const startScreen = document.getElementById('startScreen');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const finalScoreElem = document.getElementById('finalScore');
+            const startBtn = document.getElementById('startBtn');
+            const restartBtn = document.getElementById('restartBtn');
+
+            const RADIUS = 20;
+            const COLS = 10;
+            const ROWS = 12;
+
+            let board;
+            let score = 0;
+            let isShooting = false;
+            let currentBubble = null;
+            let gameStarted = false;
+
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height - 50;
+
+            function getRandomColor() {
+                return board.colors[Math.floor(Math.random() * board.colors.length)];
+            }
+
+            function spawnNextBubble() {
+                const shooterX = canvas.width / 2;
+                const shooterY = canvas.height - 45;
+                const color = getRandomColor();
+                currentBubble = new Bubble(shooterX, shooterY, RADIUS, color);
+                isShooting = false;
+            }
+
+            function startGame() {
+                sound.init();
+                score = 0;
+                scoreElem.innerText = score;
+                board = new Board(ROWS, COLS, RADIUS, canvas.width);
+                startScreen.classList.add('hidden');
+                gameOverScreen.classList.add('hidden');
+                gameStarted = true;
+                spawnNextBubble();
+            }
+
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', startGame);
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+            });
+
+            canvas.addEventListener('click', () => {
+                if (!gameStarted || isShooting || !currentBubble) return;
+
+                const angle = Math.atan2(mouseY - currentBubble.y, mouseX - currentBubble.x);
+                if (angle < 0 && angle > -Math.PI) {
+                    const speed = 14;
+                    currentBubble.dx = Math.cos(angle) * speed;
+                    currentBubble.dy = Math.sin(angle) * speed;
+                    isShooting = true;
+                    sound.playShoot();
+                }
+            });
+
+            function drawAimLine() {
+                if (!gameStarted || isShooting || !currentBubble) return;
+
+                const angle = Math.atan2(mouseY - currentBubble.y, mouseX - currentBubble.x);
+                if (angle < 0 && angle > -Math.PI) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(currentBubble.x, currentBubble.y);
+                    
+                    const lineLen = 100;
+                    const targetX = currentBubble.x + Math.cos(angle) * lineLen;
+                    const targetY = currentBubble.y + Math.sin(angle) * lineLen;
+                    
+                    ctx.lineTo(targetX, targetY);
+                    ctx.strokeStyle = 'rgba(0, 242, 254, 0.4)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([6, 6]);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            function checkCollisions() {
+                if (!isShooting) return;
+
+                currentBubble.update();
+
+                // ชนขอบซ้าย/ขวา
+                if (currentBubble.x - RADIUS <= 0 || currentBubble.x + RADIUS >= canvas.width) {
+                    currentBubble.dx *= -1;
+                    sound.playBounce();
+                }
+
+                // ชนเพดาน
+                if (currentBubble.y - RADIUS <= 0) {
+                    snapAndProcess();
+                    return;
+                }
+
+                // ชนลูกบอลอื่น
+                for (let r = 0; r < board.rows; r++) {
+                    for (let c = 0; c < board.cols; c++) {
+                        const target = board.grid[r][c];
+                        if (target) {
+                            const dist = Math.hypot(currentBubble.x - target.x, currentBubble.y - target.y);
+                            if (dist < RADIUS * 2 - 2) {
+                                snapAndProcess();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }function snapAndProcess() {
+                isShooting = false;
+                const pos = board.snapBubble(currentBubble);
+                
+                const cluster = board.findCluster(pos.row, pos.col, currentBubble.color);
+                if (cluster.length >= 3) {
+                    board.removeCluster(cluster);
+                    score += cluster.length * 10;
+                    scoreElem.innerText = score;
+                    sound.playPop();
+                } else {
+                    sound.playBounce();
+                }
+
+                if (pos.row >= board.rows - 1) {
+                    sound.playGameOver();
+                    finalScoreElem.innerText = score;
+                    gameOverScreen.classList.remove('hidden');
+                    gameStarted = false;
+                    return;
+                }
+
+                spawnNextBubble();
+            }
+
+            function drawShooterBase() {
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height - 15);
+                
+                // ฐานยิงแบบโลหะ 3D
+                const grad = ctx.createLinearGradient(-40, 0, 40, 0);
+                grad.addColorStop(0, '#1e293b');
+                grad.addColorStop(0.5, '#475569');
+                grad.addColorStop(1, '#1e293b');
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 40, Math.PI, 0, false);
+                ctx.fillStyle = grad;
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function gameLoop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (gameStarted && board) {
+                    drawAimLine();
+                    board.draw(ctx);
+                    
+                    if (currentBubble) {
+                        if (isShooting) {
+                            checkCollisions();
+                        }
+                        currentBubble.draw(ctx);
+                    }
+
+                    drawShooterBase();
+                }
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        });
+    </script>
+</body>
+</html>
