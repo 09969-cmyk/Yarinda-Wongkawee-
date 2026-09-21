@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thai - English Vocabulary Game</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#4facfe,#00f2fe);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container{
+
+    width:450px;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,.2);
+    text-align:center;
+
+}
+
+h1{
+
+    color:#2196F3;
+    margin-bottom:20px;
+
+}
+
+#thaiWord{
+
+    font-size:40px;
+    margin:25px 0;
+    color:#333;
+
+}
+
+.option{
+
+    width:100%;
+    padding:15px;
+    margin:10px 0;
+    border:none;
+    border-radius:10px;
+    background:#2196F3;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+    transition:.3s;
+
+}
+
+.option:hover{
+
+    background:#1976D2;
+
+}
+
+#message{
+
+    margin-top:20px;
+    font-size:22px;
+    font-weight:bold;
+    height:35px;
+
+}
+
+.info{
+
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+    font-size:20px;
+
+}
+
+#nextBtn{
+
+    display:none;
+    margin-top:20px;
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    background:#4CAF50;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+
+}
+
+#restart{
+
+    display:none;
+    margin-top:20px;
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    background:#FF9800;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎮 Thai ➜ English Game</h1>
+
+<h2 id="thaiWord">แมว</h2>
+
+<button class="option" onclick="checkAnswer(this)"></button>
+<button class="option" onclick="checkAnswer(this)"></button>
+<button class="option" onclick="checkAnswer(this)"></button>
+<button class="option" onclick="checkAnswer(this)"></button>
+
+<h3 id="message"></h3>
+
+<div class="info">
+
+<div>⭐ Score : <span id="score">0</span></div>
+
+<div>📖 Question : <span id="question">1</span></div>
+
+</div>
+
+<button id="nextBtn" onclick="nextQuestion()">
+
+Next Question
+
+</button>
+
+<button id="restart" onclick="restartGame()">
+
+Play Again
+
+</button>
+
+<script>
+
+const words = [
+
+{thai:"แมว", english:"CAT"},
+{thai:"สุนัข", english:"DOG"},
+{thai:"ปลา", english:"FISH"},
+{thai:"นก", english:"BIRD"},
+{thai:"แอปเปิล", english:"APPLE"},
+{thai:"กล้วย", english:"BANANA"},
+{thai:"โรงเรียน", english:"SCHOOL"},
+{thai:"ครู", english:"TEACHER"},
+{thai:"คอมพิวเตอร์", english:"COMPUTER"},
+{thai:"โรงพยาบาล", english:"HOSPITAL"},
+{thai:"รถยนต์", english:"CAR"},
+{thai:"บ้าน", english:"HOUSE"},
+{thai:"โต๊ะ", english:"TABLE"},
+{thai:"เก้าอี้", english:"CHAIR"},
+{thai:"หนังสือ", english:"BOOK"}
+
+];
+
+let score = 0;
+let currentQuestion = 0;
+let currentAnswer = "";
+
+const thaiWord = document.getElementById("thaiWord");
+const buttons = document.querySelectorAll(".option");
+const message = document.getElementById("message");
+
+function shuffle(array){
+
+return array.sort(()=>Math.random()-0.5);
+
+}
+
+function loadQuestion(){
+
+if(currentQuestion >= words.length){
+
+gameOver();
+
+return;
+
+}
+
+document.getElementById("question").innerHTML=currentQuestion+1;
+
+document.getElementById("nextBtn").style.display="none";
+
+message.innerHTML="";
+
+buttons.forEach(btn=>{
+
+btn.disabled=false;
+
+btn.style.background="#2196F3";
+
+});
+
+let question=words[currentQuestion];
+
+thaiWord.innerHTML=question.thai;
+
+currentAnswer=question.english;
+
+let choices=[currentAnswer];
+
+while(choices.length<4){
+
+let randomWord=words[Math.floor(Math.random()*words.length)].english;
+
+if(!choices.includes(randomWord)){
+
+choices.push(randomWord);
+
+}
+
+}
+
+choices=shuffle(choices);
+
+buttons.forEach((btn,index)=>{
+
+btn.innerHTML=choices[index];
+
+});
+
+}
+
+function checkAnswer(button){
+
+buttons.forEach(btn=>btn.disabled=true);
+
+if(button.innerHTML===currentAnswer){
+
+button.style.background="green";
+
+message.style.color="green";
+
+message.innerHTML="✅ Correct!";
+
+score++;
+
+document.getElementById("score").innerHTML=score;
+
+}else{
+
+button.style.background="red";
+
+message.style.color="red";
+
+message.innerHTML="❌ Wrong! Answer : "+currentAnswer;
+
+buttons.forEach(btn=>{
+
+if(btn.innerHTML===currentAnswer){
+
+btn.style.background="green";
+
+}
+
+});
+
+}
+
+document.getElementById("nextBtn").style.display="block";
+
+}
+
+function nextQuestion(){
+
+currentQuestion++;
+
+loadQuestion();
+
+}
+
+function gameOver(){
+
+thaiWord.innerHTML="🎉 Game Over";
+
+message.style.color="#333";
+
+message.innerHTML="Your Score : "+score+" / "+words.length;
+
+buttons.forEach(btn=>btn.style.display="none");
+
+document.getElementById("nextBtn").style.display="none";
+
+document.getElementById("restart").style.display="block";
+
+}
+
+function restartGame(){
+
+location.reload();
+
+}
+
+loadQuestion();
+
+</script>
+
+</div>
+
+</body>
+</html>
